@@ -21,7 +21,7 @@ and set `glpk_path` to the path of the just-installed executable binary, usually
 glpk_path=/bin/glpsol
 ```
 
-Run the following command which install the package locally in the current environment.
+Run the following command which installs the package locally in the current environment.
 ```shell
 pip3 install -e .
 ```
