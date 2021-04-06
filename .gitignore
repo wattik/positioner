@@ -1,0 +1,6 @@
+data
+binance-info
+playground
+*.egg-info
+config.ini
+/notebooks/.ipynb_checkpoints/
