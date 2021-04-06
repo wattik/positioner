@@ -25,3 +25,14 @@ Run the following command which installs the package locally in the current envi
 ```shell
 pip3 install -e .
 ```
+
+## Dummy data and "tests"
+
+Run the following command to test whether everything works as expected.
+```shell
+python examples/test.py
+```
+The standard output should show solver logs and a position of a single order:
+```shell
+[OrderType.BUY 20.000USD BTC-210409-62000-C-Side.ASK at 674.560USD]
+```
