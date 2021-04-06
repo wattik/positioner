@@ -1,4 +1,6 @@
 # Positioner
+Positioner is not a sex postions app but rather a tool that takes a live order book 
+in a options market and finds an optimal postion that maximizes average return. 
 
 ## Dependencies
 - GLPK binary (LP solver)
