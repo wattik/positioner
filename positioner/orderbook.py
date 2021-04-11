@@ -20,36 +20,53 @@ class OptionType(Enum):
         return self.value
 
 
-def symbol_asset(symbol): return symbol.split("-")[0]
+@dataclass
+class Symbol:
+    symbol: str
 
+    @property
+    def asset(self):
+        return self.symbol.split("-")[0]
 
-def symbol_expiry(symbol): return int(symbol.split("-")[1])
+    @property
+    def expiry(self):
+        return self.symbol.split("-")[1]
 
+    @property
+    def strike_price(self):
+        return int(self.symbol.split("-")[2])
 
-def symbol_strike_price(symbol): return int(symbol.split("-")[2])
+    @property
+    def option_type(self):
+        return OptionType(self.symbol.split("-")[3])
 
+    def __eq__(self, other):
+        return isinstance(other, Symbol) and self.symbol == other.symbol
 
-def symbol_option_type(symbol): return OptionType(symbol.split("-")[3])
+    def __hash__(self):
+        return hash(self.symbol)
 
+    def __repr__(self):
+        return self.symbol
 
 @dataclass
 class Option:
     price: float
     quantity: float
     side: Side
-    symbol: str
+    symbol: Symbol
 
     @property
-    def asset(self): return symbol_asset(self.symbol)
+    def asset(self): return self.symbol.asset
 
     @property
-    def expiry(self): return symbol_expiry(self.symbol)
+    def expiry(self): return self.symbol.expiry
 
     @property
-    def strike_price(self): return symbol_strike_price(self.symbol)
+    def strike_price(self): return self.symbol.strike_price
 
     @property
-    def option_type(self): return symbol_option_type(self.symbol)
+    def option_type(self): return self.symbol.option_type
 
     def __eq__(self, other):
         return (
@@ -66,12 +83,28 @@ class Option:
     def __repr__(self):
         return f"{self.symbol}-{self.side}"
 
+    @classmethod
+    def make(cls, price, quantity, side, symbol):
+        return cls(
+            float(price),
+            float(quantity),
+            Side(side),
+            Symbol(symbol)
+        )
 
-def read_order_book(filename):
+def read_order_book_from_csv(filename):
     df = pd.read_csv(filename)
 
     order_book = []
     for i, row in df.iterrows():
-        order_book += [Option(float(row.price), float(row.qnty), Side(row.side), row.symbol)]
+        order_book += [Option.make(row.price, row.qnty, row.side, row.symbol)]
+
+    return order_book
+
+
+def read_order_book_from_dict(data):
+    order_book = []
+    for option in data:
+        order_book += [Option.make(option["price"], option["qnty"], option["side"], option["symbol"])]
 
     return order_book
