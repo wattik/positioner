@@ -1,5 +1,6 @@
 from setuptools import setup
 
+# POSITIONER PACKAGES
 setup(
     name='positioner',
     version='0.1',
@@ -11,5 +12,15 @@ setup(
         "pandas",
         "PuLP",
         "scipy",
+    ]
+)
+
+# WATCHER PACKAGES
+setup(
+    name='watcher',
+    version='0.1',
+    packages=["watcher"],
+    install_requires=[
+        "python-telegram-bot"
     ]
 )

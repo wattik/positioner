@@ -2,7 +2,7 @@ from positioner import compute_strategy
 from positioner.index_price import read_index_price_from_order_book
 from positioner.orderbook import read_order_book
 
-orderbook_csv = "examples/orderbook_snapshot_210409.csv"
+orderbook_csv = "./orderbook_snapshot_210409.csv"
 
 order_book = read_order_book(orderbook_csv)
 index_price = read_index_price_from_order_book(orderbook_csv)
