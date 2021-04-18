@@ -11,5 +11,7 @@ setup(
         "pandas",
         "PuLP",
         "scipy",
+        "aiohttp",
+        "nest_asyncio"
     ]
 )

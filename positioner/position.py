@@ -26,5 +26,9 @@ class Order:
     def symbol(self):
         return self.option.symbol
 
+    @property
+    def quantity(self):
+        return self.amount / self.price
+
     def __repr__(self):
         return f"{self.order_type} {self.amount:1.3f}USD {self.option} at {self.price:1.3f}USD"

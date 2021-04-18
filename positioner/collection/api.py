@@ -5,7 +5,7 @@ URL_BASE = "https://vapi.binance.com"
 
 async def fetch(session: aiohttp.ClientSession, url, params=None):
     async with session.get(url, params=params, ssl=False) as response:
-        assert response.status == 200
+        assert response.status == 200, response.status
         return await response.json()
 
 
