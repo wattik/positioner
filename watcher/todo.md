@@ -5,10 +5,10 @@
 - [x] run test from examples, confirm GLPK works as intended
 - [x] add binance keys to config.ini
 - [x] extract config.py to a separate package (utils)
-- [ ] test out the new python-binance vanilla option functions
 - [ ] implement periodical fetching of order_book
-  - saving it to a file
-  - run solver on the order_book file and save result of solver to a file
-    - pair it with the order_book file
+  1) call ```collect_traded_expiry_dates``` to get list of all dates
+  2) for each date in expiry dates, fetch order books
+  - save order book every 1 MIN
+  - run solver ever 5th order book
   - based on a condition (big profit), send notification of solver result
 - [ ] brainstorm capabilities of realtime solver

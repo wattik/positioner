@@ -46,8 +46,10 @@ async def a_collect_traded_options(expiry_date=None, symbols=None):
 
     return options
 
+
 def collect_traded_options(expiry_date=None, symbols=None):
     return asyncio.run(a_collect_traded_options(expiry_date=expiry_date, symbols=symbols))
+
 
 if __name__ == '__main__':
     print(collect_traded_options(expiry_date="210416"))

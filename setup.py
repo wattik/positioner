@@ -13,16 +13,7 @@ setup(
         "PuLP",
         "scipy",
         "aiohttp",
-        "nest_asyncio"
-    ]
-)
-
-# WATCHER PACKAGES
-setup(
-    name='watcher',
-    version='0.1',
-    packages=["watcher"],
-    install_requires=[
+        "nest_asyncio",
         "python-telegram-bot"
     ]
 )
