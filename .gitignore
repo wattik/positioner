@@ -7,3 +7,4 @@ config.ini
 .idea
 venv
 */**/__pycache__
+outputs

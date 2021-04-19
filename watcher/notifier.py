@@ -20,14 +20,13 @@ class Notifier:
         buy_handler = CommandHandler("buy", self.__on_buy_cmd)
         dispatcher.add_handler(buy_handler)
 
-    def start(self):
         # Start the Bot
         self.updater.start_polling()
 
         # Run the bot until you press Ctrl-C or the process receives SIGINT,
         # SIGTERM or SIGABRT. This should be used most of the time, since
         # start_polling() is non-blocking and will stop the bot gracefully.
-        self.updater.idle()
+        # self.updater.idle()
 
     def __on_start_cmd(self, update: Update, _: CallbackContext) -> None:
         """Send a welcome message when the command /start is issued."""

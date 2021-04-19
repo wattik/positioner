@@ -1,6 +1,7 @@
 import asyncio
 import sys
-
+import csv
+from datetime import datetime
 from positioner import compute_strategy
 from positioner.collection.index_price import a_collect_index_price
 from positioner.collection.orderbook import a_collect_traded_options
@@ -14,32 +15,56 @@ api_secret = config.default("binance", "api_secret")
 UNDERLYING = "BTCUSDT"
 
 
-def filter_expiry_dates(symbols: list[str]) -> list[str]:
-    symbols = set(
-        Symbol(symbol).expiry
-        for symbol in
-        symbols
-    )
+def group_trading_options_by_expiry_date(trading_options: list[dict]) -> dict:
+    grouped = {}
+    for opt in trading_options:
+        # extract expiration date from option
+        expiry_date = Symbol(opt["symbol"]).expiry
 
-    return list(symbols)
+        # append to array or create array where key is the expiry_date
+        if expiry_date in grouped:
+            grouped[expiry_date].append(opt)
+        else:
+            grouped[expiry_date] = [opt]
+    return grouped
+
+
+def write_csv(options: dict):
+    now = datetime.now()
+    dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
+    path = "../outputs/" + dt_string + ".csv"
+    with open(path, 'w', encoding='utf8', newline='') as csv_file:
+        # write headers first
+        writer = csv.DictWriter(csv_file, fieldnames=options[0].keys())
+        writer.writeheader()
+
+        # write all options
+        writer.writerows(options)
 
 
 async def main():
     notifier = Notifier()
     while True:
         try:
-            print('fetching all available symbols and filtering expiry dates')
-            all_symbols = await a_collect_traded_option_symbols()
-            expiry_dates = filter_expiry_dates(all_symbols)
+            print('fetching all symbols...')
+            symbols = await a_collect_traded_option_symbols()
 
-            for expiry_date in expiry_dates:
-                print("Expiry date", expiry_date)
-                current_order_book = await a_collect_traded_options(expiry_date=expiry_date)
-                order_book = read_order_book_from_dict(current_order_book)
-                # todo save order book to file
-                index_price = await a_collect_index_price(underlying=UNDERLYING)
+            print('fetching trading options for all symbols...')
+            options = await a_collect_traded_options(expiry_date=None, symbols=symbols)
+            grouped_options = group_trading_options_by_expiry_date(options)
 
-                print("Order book", order_book, "index price", index_price)
+            print('writing options to file...')
+            write_csv(options)
+
+            print('fetching index price for asset:', UNDERLYING)
+            index_price = await a_collect_index_price(underlying=UNDERLYING)
+
+            for expiry_date, options in grouped_options.items():
+                print("Computing strategy for", expiry_date)
+                # create order book from options
+                order_book = read_order_book_from_dict(options)
+
+                # compute strategy
                 solution = compute_strategy(
                     order_book=order_book,
                     index_price=index_price,
@@ -51,15 +76,19 @@ async def main():
                 print("VAL:", solution.value)
                 print("ORD:", solution.orders)
 
+                # if we found strategy average value above given threshold, send notification
                 threshold = float(config.default("telegram", "alert_threshold"))
                 if solution.value > threshold:
-                    # send notification
+                    print("Sending alert notification")
                     notifier.send_message("!Found profitable solution! Value: {0}\nOrders: {1}".format(solution.value, solution.orders))
+
+            # pause the loop for 10 mins
+            await asyncio.sleep(60 * 10)
         except:
             print("Unexpected error:", sys.exc_info()[0])
+            # pause the loop for 1 min and retry
+            await asyncio.sleep(60)
 
-        # pause the loop for N mins
-        await asyncio.sleep(60 * 5)
 
 # https://tutorialedge.net/python/concurrency/asyncio-event-loops-tutorial/
 loop = asyncio.get_event_loop()

@@ -23,10 +23,12 @@ async def a_collect_traded_option_symbols(expiry_date=None):
 
     return symbols
 
+
 def collect_traded_option_symbols(expiry_date=None):
     return asyncio.run(a_collect_traded_option_symbols(expiry_date=expiry_date))
 
-def collect_traded_expiry_dates():
+
+def collect_traded_expiry_dates() -> list[str]:
     symbols = set(
         Symbol(symbol).expiry
         for symbol in
@@ -34,3 +36,13 @@ def collect_traded_expiry_dates():
     )
 
     return list(symbols)
+
+
+async def collect_traded_option_symbols_mapped() -> list[Symbol]:
+    str_symbols = await a_collect_traded_option_symbols()
+    symbols = list(
+        Symbol(symbol)
+        for symbol in str_symbols
+    )
+    return symbols
+
