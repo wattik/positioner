@@ -1,5 +1,6 @@
 from setuptools import setup
 
+# POSITIONER PACKAGES
 setup(
     name='positioner',
     version='0.1',
@@ -12,6 +13,7 @@ setup(
         "PuLP",
         "scipy",
         "aiohttp",
-        "nest_asyncio"
+        "nest_asyncio",
+        "python-telegram-bot"
     ]
 )
