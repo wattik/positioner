@@ -11,7 +11,7 @@ def compute_strategy(
         index_price: float,
         budget: float,
         expected_index_price: float = None,
-        volatility: float = 5_000,
+        max_shift: float = 10_000,
         maximal_relative_loss: float= -0.1,
         loss_space_delta: float = 0.7
 ) -> Strategy:
@@ -20,7 +20,7 @@ def compute_strategy(
     strategy_comp = StrategyComputer(order_book)
 
     strategy_comp.specify(
-        GaussianObjective(center=expected_index_price, scale=volatility, space=space_by_index_price(index_price, 0.9, n=1_000))
+        GaussianObjective(center=expected_index_price, delta=max_shift, space=space_by_index_price(index_price, 0.9, n=1_000))
     )
     strategy_comp.specify(
         MaxRelativeLossPolicy(maximal_relative_loss, space=space_by_index_price(index_price, loss_space_delta, n=600))

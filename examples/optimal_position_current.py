@@ -4,7 +4,7 @@ from positioner.orderbook import read_order_book_from_dict
 from positioner.collection.orderbook import collect_traded_options
 from positioner.collection.index_price import collect_index_price
 
-EXPIRY_DATE = "210430"
+EXPIRY_DATE = "210528"
 UNDERLYING = "BTCUSDT"
 
 current_orderbook = collect_traded_options(expiry_date=EXPIRY_DATE)
@@ -16,7 +16,7 @@ solution = compute_strategy(
     index_price=index_price,
     budget=20,
     maximal_relative_loss=-0.1,  # maximal allowed loss is -100*BUDGET in USD,
-    volatility=5_000
+    max_shift=10_000  # profits are maximized in [index_price - max_shift, index_price + max_shift]
 )
 
 print("VAL:", solution.value)

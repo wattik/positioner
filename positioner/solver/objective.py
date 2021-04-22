@@ -7,7 +7,11 @@ from .problem import State
 
 
 class GaussianObjective:
-    def __init__(self, center, scale, space, base_pandl=None):
+    def __init__(self, center, delta, space, base_pandl=None, scale=None):
+        if scale:
+            raise DeprecationWarning("use delta instead")
+
+        scale = delta/stats.norm.ppf(0.99)
         self.weights = stats.norm.pdf(space, center, scale)
         self.space = space
 
