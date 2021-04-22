@@ -3,7 +3,7 @@ from typing import Callable, Iterator
 
 import pulp as pl
 
-from positioner import config
+from utils import config
 from positioner.orderbook import Option, Side
 from positioner.position import Order, OrderType
 

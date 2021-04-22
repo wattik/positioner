@@ -4,3 +4,7 @@ playground
 *.egg-info
 config.ini
 /notebooks/.ipynb_checkpoints/
+.idea
+venv
+*/**/__pycache__
+outputs
