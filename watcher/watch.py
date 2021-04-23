@@ -32,7 +32,7 @@ def group_trading_options_by_expiry_date(trading_options: list[dict]) -> dict:
 def write_csv(options: dict):
     now = datetime.now()
     dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
-    path = "../outputs/" + dt_string + ".csv"
+    path = "./outputs/" + dt_string + ".csv"
     with open(path, 'w', encoding='utf8', newline='') as csv_file:
         # write headers first
         writer = csv.DictWriter(csv_file, fieldnames=options[0].keys())

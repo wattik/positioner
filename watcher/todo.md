@@ -7,3 +7,9 @@
 - [x] extract config.py to a separate package (utils)
 - [x] implement periodical fetching of order_book
 - [ ] brainstorm capabilities of realtime solver with websockets
+
+nohup python3.9 watcher/watch.py > output.log &
+
+ps ax | grep watcher.py
+
+python3.9 -m pip install -e .
