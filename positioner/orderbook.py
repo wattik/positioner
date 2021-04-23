@@ -49,6 +49,7 @@ class Symbol:
     def __repr__(self):
         return self.symbol
 
+
 @dataclass
 class Option:
     price: float
@@ -92,7 +93,8 @@ class Option:
             Symbol(symbol)
         )
 
-def read_order_book_from_csv(filename):
+
+def read_order_book_from_csv(filename) -> list[Option]:
     df = pd.read_csv(filename)
 
     order_book = []
@@ -108,3 +110,27 @@ def read_order_book_from_dict(data):
         order_book += [Option.make(option["price"], option["qnty"], option["side"], option["symbol"])]
 
     return order_book
+
+
+def read_options_from_csv(filename):
+    df = pd.read_csv(filename)
+
+    options = []
+    for i, row in df.iterrows():
+        options.append(row.to_dict())
+
+    return options
+
+
+def group_trading_options_by_expiry_date(trading_options: list[dict]) -> dict:
+    grouped = {}
+    for opt in trading_options:
+        # extract expiration date from option
+        expiry_date = Symbol(opt["symbol"]).expiry
+
+        # append to array or create array where key is the expiry_date
+        if expiry_date in grouped:
+            grouped[expiry_date].append(opt)
+        else:
+            grouped[expiry_date] = [opt]
+    return grouped

@@ -15,6 +15,7 @@ setup(
         "aiohttp",
         "nest_asyncio",
         "python-telegram-bot",
-        "flask"
+        "flask",
+        "pymongo"
     ]
 )

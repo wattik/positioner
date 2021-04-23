@@ -9,7 +9,6 @@
 - [ ] brainstorm capabilities of realtime solver with websockets
 
 nohup python3.9 watcher/watch.py > output.log &
-
-ps ax | grep watcher.py
-
+nohup python3.9 flask-api/server.py > output-api.log &
+ps -aux | grep python3.9
 python3.9 -m pip install -e .

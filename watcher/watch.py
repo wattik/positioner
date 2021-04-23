@@ -6,7 +6,7 @@ from positioner import compute_strategy
 from positioner.collection.index_price import a_collect_index_price
 from positioner.collection.orderbook import a_collect_traded_options
 from positioner.collection.traded_symbols import a_collect_traded_option_symbols
-from positioner.orderbook import read_order_book_from_dict, Symbol
+from positioner.orderbook import read_order_book_from_dict, Symbol, group_trading_options_by_expiry_date
 from utils import config
 from watcher.notifier import Notifier
 
@@ -15,18 +15,7 @@ api_secret = config.default("binance", "api_secret")
 UNDERLYING = "BTCUSDT"
 
 
-def group_trading_options_by_expiry_date(trading_options: list[dict]) -> dict:
-    grouped = {}
-    for opt in trading_options:
-        # extract expiration date from option
-        expiry_date = Symbol(opt["symbol"]).expiry
 
-        # append to array or create array where key is the expiry_date
-        if expiry_date in grouped:
-            grouped[expiry_date].append(opt)
-        else:
-            grouped[expiry_date] = [opt]
-    return grouped
 
 
 def write_csv(options: dict):
@@ -43,7 +32,8 @@ def write_csv(options: dict):
 
 
 async def main():
-    notifier = Notifier()
+    alert_enabled = int(config.default("telegram", "alert_enabled")) > 0
+    notifier = Notifier() if alert_enabled else None
     while True:
         try:
             print('fetching all symbols...')
@@ -78,7 +68,8 @@ async def main():
 
                 # if we found strategy average value above given threshold, send notification
                 threshold = float(config.default("telegram", "alert_threshold"))
-                if solution.value > threshold:
+                alert_enabled = int(config.default("telegram", "alert_enabled")) > 0
+                if alert_enabled and solution.value > threshold:
                     print("Sending alert notification")
                     notifier.send_message("!Found profitable solution! Value: {0}\nOrders: {1}".format(solution.value, solution.orders))
 
