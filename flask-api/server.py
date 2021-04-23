@@ -33,10 +33,10 @@ def get_order_books():
 def get_files_by_range(start: str, end: str, files: list):
     if start and end:
         print("Filtering files from '{}' to '{}'".format(start, end))
-        return list(filter(lambda f: start <= splitext(f)[0] <= end, files))
+        return list(filter(lambda f: start < splitext(f)[0] <= end, files))
     elif start:
         print("Filtering files from '{}'".format(start))
-        return list(filter(lambda f: splitext(f)[0] >= start, files))
+        return list(filter(lambda f: splitext(f)[0] > start, files))
     elif end:
         print("Filtering files till {}".format(end))
         return list(filter(lambda f: splitext(f)[0] <= end, files))
