@@ -10,20 +10,17 @@ from positioner.orderbook import read_order_book_from_dict, Symbol, group_tradin
 from utils import config
 from watcher.notifier import Notifier
 
-api_key = config.default("binance", "api_key")
-api_secret = config.default("binance", "api_secret")
+# api_key = config.default("binance", "api_key")
+# api_secret = config.default("binance", "api_secret")
 UNDERLYING = "BTCUSDT"
 
 
-
-
-
-def write_csv(options: dict):
+def write_csv(options: dict, index_price: float):
     now = datetime.now()
     dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
     path = "./outputs/" + dt_string + ".csv"
     with open(path, 'w', encoding='utf8', newline='') as csv_file:
-        # write headers first
+        # write headers first (read it from first row)
         writer = csv.DictWriter(csv_file, fieldnames=options[0].keys())
         writer.writeheader()
 
@@ -32,8 +29,7 @@ def write_csv(options: dict):
 
 
 async def main():
-    alert_enabled = int(config.default("telegram", "alert_enabled")) > 0
-    notifier = Notifier() if alert_enabled else None
+    notifier = Notifier()
     while True:
         try:
             print('fetching all symbols...')
@@ -43,11 +39,12 @@ async def main():
             options = await a_collect_traded_options(expiry_date=None, symbols=symbols)
             grouped_options = group_trading_options_by_expiry_date(options)
 
-            print('writing options to file...')
-            write_csv(options)
-
+            # todo read this from the option and inside the for loop below? That depends if all options are within the one api call on Binance, but now they only offer BTCUSDT
             print('fetching index price for asset:', UNDERLYING)
             index_price = await a_collect_index_price(underlying=UNDERLYING)
+
+            print('writing options to file...')
+            write_csv(options, index_price)
 
             for expiry_date, options in grouped_options.items():
                 print("Computing strategy for", expiry_date)
@@ -66,9 +63,17 @@ async def main():
                 print("VAL:", solution.value)
                 print("ORD:", solution.orders)
 
-                # if we found strategy average value above given threshold, send notification
-                threshold = float(config.default("telegram", "alert_threshold"))
+                # toggle bot listening
                 alert_enabled = int(config.default("telegram", "alert_enabled")) > 0
+                if alert_enabled:
+                    if not notifier.is_running:
+                        notifier.start_listening()
+                else:
+                    if notifier.is_running:
+                        notifier.stop_listening()
+
+                # if we found strategy average value above given threshold and alerts are enabled, send notification
+                threshold = float(config.default("telegram", "alert_threshold"))
                 if alert_enabled and solution.value > threshold:
                     print("Sending alert notification")
                     notifier.send_message("!Found profitable solution! Value: {0}\nOrders: {1}".format(solution.value, solution.orders))
