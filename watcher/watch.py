@@ -21,11 +21,12 @@ def write_csv(options: dict, index_price: float):
     path = "./outputs/" + dt_string + ".csv"
     with open(path, 'w', encoding='utf8', newline='') as csv_file:
         # write headers first (read it from first row)
-        writer = csv.DictWriter(csv_file, fieldnames=options[0].keys())
+        writer = csv.DictWriter(csv_file, fieldnames=[*options[0].keys(), 'index price'])
         writer.writeheader()
 
         # write all options
-        writer.writerows(options)
+        for option in options:
+            writer.writerow({**option, 'index price': index_price})
 
 
 async def main():
