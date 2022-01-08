@@ -17,7 +17,7 @@ UNDERLYING = "BTCUSDT"
 
 def write_csv(options: dict, index_price: float):
     now = datetime.now()
-    dt_string = now.strftime("%d-%m-%Y-%H-%M-%S")
+    dt_string = now.strftime("%Y-%m-%d-%H-%M-%S")
     path = "./outputs/" + dt_string + ".csv"
     with open(path, 'w', encoding='utf8', newline='') as csv_file:
         # write headers first (read it from first row)

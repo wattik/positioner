@@ -8,6 +8,8 @@ import zipfile
 
 app = Flask(__name__)
 
+# TODO After 08/01/2022 this will no longer work properly, the CSV outputs are now saved with different filename ("%Y-%m-%d-%H-%M-%S" instead of "%d-%m-%Y-%H-%M-%S")
+
 
 @app.route('/order-books', methods=["GET"])
 def get_order_books():
