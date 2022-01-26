@@ -1,8 +1,7 @@
 from positioner import compute_strategy
-from positioner.index_price import read_index_price_from_order_book
-from positioner.orderbook import read_order_book_from_csv
+from positioner.readers import read_order_book_from_csv, read_index_price_from_order_book
 
-orderbook_csv = "data/orderbook_snapshot_210326.csv"
+orderbook_csv = "args/orderbook_snapshot_210326.csv"
 order_book = read_order_book_from_csv(orderbook_csv)
 index_price = read_index_price_from_order_book(orderbook_csv)
 
@@ -17,5 +16,3 @@ solution = compute_strategy(
 
 print("VAL:", solution.value)
 print("ORD:", solution.orders)
-
-

@@ -1,7 +1,7 @@
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Updater, CommandHandler, CallbackContext
 
-from utils import config
+from positioner import config
 
 
 class Notifier:

@@ -1,5 +1,5 @@
 from positioner import compute_strategy
-from positioner.orderbook import read_order_book_from_dict
+from positioner.readers import read_order_book_from_dict
 
 from positioner.collection.orderbook import collect_traded_options
 from positioner.collection.index_price import collect_index_price
@@ -16,7 +16,8 @@ solution = compute_strategy(
     index_price=index_price,
     budget=20,
     maximal_relative_loss=-0.1,  # maximal allowed loss is -100*BUDGET in USD,
-    max_shift=10_000  # profits are maximized in [index_price - max_shift, index_price + max_shift]
+    max_shift=1_000,  # profits are maximized in [index_price - max_shift, index_price + max_shift]
+    loss_space_delta=0.5
 )
 
 print("VAL:", solution.value)

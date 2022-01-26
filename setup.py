@@ -14,6 +14,7 @@ setup(
         "scipy",
         "aiohttp",
         "nest_asyncio",
-        "python-telegram-bot"
+        "python-telegram-bot",
+        "namespaces"
     ]
 )

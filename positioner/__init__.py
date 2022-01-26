@@ -1,5 +1,3 @@
-from positioner.wrapper import *
-
 # start of patch
 # handle jupyter notebook issue with nested async loops
 import nest_asyncio
