@@ -1,5 +1,5 @@
 import numpy as np
-import pulp
+import modelling as ml
 
 from positioner.components.order import Order
 from positioner.pandl import future_expenses, immediate_allocations, position_margin, total_allocations
@@ -21,22 +21,24 @@ class MaxExpensesPolicy:
 
     def __call__(self, state: State):
         cache = PandLCache()
-        cache.precompute(position_margin, self.initial_position, self.space)
-        cache.precompute(future_expenses, state.vars.all_to_close(), self.space)
+        position_margin_c = cache.precompute(position_margin, self.initial_position, self.space)
+        future_expenses_c = cache.precompute(future_expenses, state.vars.all_to_close(), self.space)
 
-        expenses_base = 0
+        expenses_base = ml.LinearCombination()
         for option, amount in state.vars.all_to_open().items():
-            expenses_base += amount * (total_allocations(option, self.current_price) / option.price)
+            expenses_base.add(amount, (total_allocations(option, self.current_price) / option.price))
 
         for option, amount in state.vars.all_to_close().items():
-            expenses_base += amount * (immediate_allocations(option, self.current_price) / option.price)
+            expenses_base.add(amount, (immediate_allocations(option, self.current_price) / option.price))
 
         for x in self.space:
-            expenses = [expenses_base]
-            expenses += [sum(cache.wrap(position_margin)(order, x) for order in self.initial_position)]
+            expenses = ml.LinearCombination(expenses_base.variables[:], expenses_base.constants[:])
+            expenses.offset = sum(
+                position_margin_c(order, x) for order in self.initial_position
+            )
 
             for option, amount in state.vars.all_to_close().items():
                 # This here signals expenses are decreased by closing an option since no exercise fee is payed
-                expenses += [amount * (-cache.wrap(future_expenses)(option, x) / option.price)]
+                expenses.add(amount, (-future_expenses_c(option, x) / option.price))
 
-            state.constrain(pulp.lpSum(expenses) <= self.budget)
+            state.constrain(expenses, self.budget)

@@ -1,5 +1,5 @@
 import numpy as np
-import pulp
+import modelling as ml
 from scipy import stats
 
 from positioner.pandl import future_expenses, immediate_pandl, total_pandl
@@ -28,15 +28,15 @@ class GaussianPAndLObjective:
         """
         Estimate FINAL P&L without offset, hence margin and previous earnings not taken into budget.
         """
-        wpandls = []
+        wpandls = ml.LinearCombination()
 
         for option, amount in state.vars.all_to_open().items():
-            wpandls.append(amount * self.weigh(total_pandl(option, self.space) / option.price))
+            wpandls.add(amount, self.weigh(total_pandl(option, self.space) / option.price))
 
         for option, amount in state.vars.all_to_close().items():
-            wpandls.append(amount * self.weigh(immediate_pandl(option, self.space) / option.price))
+            wpandls.add(amount, self.weigh(immediate_pandl(option, self.space) / option.price))
 
             # This here signals P&L is increased by closing an option since no exercise fee will be payed
-            wpandls.append(amount * self.weigh(future_expenses(option, self.space) / option.price))
+            wpandls.add(amount, self.weigh(future_expenses(option, self.space) / option.price))
 
-        state.objective(pulp.lpSum(wpandls))
+        state.objective(wpandls)

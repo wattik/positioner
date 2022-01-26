@@ -1,23 +1,21 @@
-from dataclasses import dataclass
 from operator import attrgetter
 from typing import Callable
 
-import pulp as pl
+import modelling as ml
 
-from positioner import config
 from positioner.components.option import Option, Side
-from positioner.components.order import MatchingQuantity, Order, OrderType, PositionQuantities
+from positioner.components.order import MatchingQuantity, Order, OrderType
 from positioner.functional.option import distance_to_fair_price, partition_option_by_quantity
 from positioner.solver.solution import Strategy
 
 
 class Variables:
     def __init__(self):
-        self.buy_to_open: dict[Option, pl.LpVariable] = dict()
-        self.sell_to_open: dict[Option, pl.LpVariable] = dict()
+        self.buy_to_open: dict[Option, ml.Variable] = dict()
+        self.sell_to_open: dict[Option, ml.Variable] = dict()
 
-        self.buy_to_close: dict[Option, pl.LpVariable] = dict()
-        self.sell_to_close: dict[Option, pl.LpVariable] = dict()
+        self.buy_to_close: dict[Option, ml.Variable] = dict()
+        self.sell_to_close: dict[Option, ml.Variable] = dict()
 
     def __repr__(self):
         return f"{self.all_to_close()}\n{self.all_to_open()}"
@@ -53,42 +51,35 @@ class Variables:
 
     @staticmethod
     def var_from_option(option: Option):
-        amount = pl.LpVariable(
+        amount = ml.Variable(
             name=f"{option.symbol}-{option.side}-p{option.price}USD-q{option.quantity}",
-            lowBound=0.0,
-            upBound=option.quantity * option.price
+            lower_bound=0.0,
+            upper_bound=option.quantity * option.price
         )
-
         return {option: amount}
 
 
-@dataclass
 class State:
-    model: pl.LpProblem
-    vars: Variables
+    def __init__(self, vars: Variables):
+        self.vars = vars
+        self.model = ml.Model()
 
-    def constrain(self, expr):
-        self.model += expr
+    def constrain(self, left, right):
+        self.model.constrain(left, right)
 
     def objective(self, obj):
-        self.model += obj
+        self.model.objective(obj)
 
 
 class StrategyComputer:
-    def __init__(self, order_book: list[Option], initial_position: list[Order], index_price: float, budget: float,
-                 solver_path=None):
-        solver_path = solver_path or config.default("solver", "glpk_path")
-
+    def __init__(self, order_book: list[Option], initial_position: list[Order], index_price: float, budget: float):
         self.budget = budget
         self.index_price = index_price
         self.initial_position = initial_position
 
-        self.model = pl.LpProblem("OptionTradingStrategy", pl.LpMaximize)
-        self.solver = pl.GLPK_CMD(path=solver_path, options=["--nopresol"])
-
-        position_quants = MatchingQuantity(initial_position)
         variables = Variables()
 
+        position_quants = MatchingQuantity(initial_position)
         order_book = sorted(order_book, key=distance_to_fair_price)
         order_book = sorted(order_book, key=attrgetter("symbol"))
 
@@ -106,27 +97,28 @@ class StrategyComputer:
             else:
                 variables.add_to_open(option)
 
-        self.state = State(model=self.model, vars=variables)
+        self.state = State(vars=variables)
 
     def specify(self, specify: Callable):
         specify(self.state)
 
     def compute(self) -> Strategy:
-        status = self.solver.solve(self.model)
-        status_str = pl.LpStatus[status]
-        optimality = status_str == "Optimal"
+        solution = ml.solve_cvxpy(self.state.model)
 
-        optimal_value = self.model.objective.value()
+        status_str = solution.message
+        optimality = solution.optimality
+        optimal_value = solution.value
+
         orders = []
 
         if optimality:
             for option, var in self.state.vars.sell.items():
-                amount = var.value()
+                amount = var.value
                 if amount > 0.0:
                     orders += [Order(amount, OrderType.SELL, option)]
 
             for option, var in self.state.vars.buy.items():
-                amount = var.value()
+                amount = var.value
                 if amount > 0.0:
                     orders += [Order(amount, OrderType.BUY, option)]
 

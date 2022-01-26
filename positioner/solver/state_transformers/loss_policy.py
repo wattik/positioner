@@ -1,5 +1,5 @@
 import numpy as np
-import pulp
+import modelling as ml
 
 from positioner.components.order import Order
 from positioner.pandl import future_expenses, immediate_pandl, total_pandl, value
@@ -70,17 +70,18 @@ class MaxRelativeLossPolicy:
                 + sum(value_c(order, future_price) for order in self.initial_position)
             )
 
-            terms = []
+            terms = ml.LinearCombination()
+
             for option, amount in state.vars.all_to_open().items():
-                terms += [(amount, (total_pandl_c(option, future_price) / option.price))]
+                terms.add(amount, (total_pandl_c(option, future_price) / option.price))
 
             for option, amount in state.vars.all_to_close().items():
-                terms += [(amount, (immediate_pandl_c(option, future_price) / option.price))]
+                terms.add(amount, (immediate_pandl_c(option, future_price) / option.price))
 
                 # correcting the exercise fee for position options that has not been matched
-                terms += [(amount, (future_expenses_c(option, future_price) / option.price))]
+                terms.add(amount, (future_expenses_c(option, future_price) / option.price))
 
-            pandl = pulp.LpAffineExpression(terms) + pandl_base
+            terms.offset = pandl_base
 
             #   -a * expenses(s) <= value(s, p) - total_budget
-            state.constrain(self.max_relative_loss * self.total_budget <= pandl)
+            state.constrain(self.max_relative_loss * self.total_budget, terms)
