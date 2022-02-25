@@ -63,7 +63,7 @@ async def main():
 
             # print('writing options to file...')
             # write_csv(options, index_price)
-            print('writing orderbook to mongodb', symbols)
+            print('writing orderbook to mongodb')
             persist_orderbook(grouped_options, index_price, orderbook_mapper)
 
             # for expiry_date, options in grouped_options.items():
