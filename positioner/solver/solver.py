@@ -1,5 +1,6 @@
 import logging
 from collections import Callable
+from typing import Literal
 
 from positioner.components.option import Option
 from positioner.components.order import Order
@@ -17,25 +18,33 @@ def compute_strategy(
     order_book: list[Option],
     index_price: float,
     budget: float,
+    /,
+    expected_index_price: float = None,
     total_budget: float = None,
     initial_position: list[Order] = None,
-    expected_index_price: float = None,
     historical_orders: list[Order] = None,
-    use_clean_from_costly_trades: bool = True,
+    # Contingency Space
+    contingency_space_delta: float = 0.7,
+    loss_space_bounds: tuple[float] = None,
+    # Max Loss Policy
     use_max_loss_policy: bool = True,
     maximal_absolute_loss: float = None,
     maximal_relative_loss: float = -0.1,
-    loss_space_delta: float = 0.7,
-    loss_space_bounds: tuple[float] = None,
+    # Positivity Policy
     use_always_positivity_policy: bool = False,
+    # Loss Lower Bound Policy
     use_lower_bound_loss_policy: bool = False,
     lower_bound_functor: Callable = None,
+    # Loss Improving Policy
     use_improving_pandl_policy: bool = False,
     improving_discount_rate: float = None,
-    objective_type="expected_pandl",
+    # Objective Type
+    objective_type: Literal["expected_pandl", "min_pandl"] = "expected_pandl",
     max_shift: float = 10_000,
     objective_relative_bounds: tuple[float] = None,
     objective_absolute_bounds: tuple[float] = None,
+    *,
+    use_clean_from_costly_trades: bool = True,
 ) -> Strategy:
     expected_index_price = expected_index_price or index_price
     initial_position = initial_position or []
@@ -91,7 +100,7 @@ def compute_strategy(
             )
         )
 
-    contingency_space = space_by_index_price(index_price, delta=loss_space_delta, bounds=loss_space_bounds, n=600)
+    contingency_space = space_by_index_price(index_price, delta=contingency_space_delta, bounds=loss_space_bounds, n=600)
 
     if use_max_loss_policy:
         strategy_comp.specify(

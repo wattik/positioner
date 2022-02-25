@@ -1,5 +1,3 @@
-from collections import Callable
-
 from tqdm import tqdm
 
 from positioner.components.option import Option
