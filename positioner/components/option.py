@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property, total_ordering
 from operator import attrgetter
-
+import pandas as pd
 from positioner.utils.functools import groupby
 
 
@@ -76,11 +76,11 @@ class Option:
 
     def __eq__(self, other):
         return (
-            isinstance(other, Option) and
-            other.price == self.price and
-            other.quantity == self.quantity and
-            other.side == self.side and
-            other.symbol == self.symbol
+                isinstance(other, Option) and
+                other.price == self.price and
+                other.quantity == self.quantity and
+                other.side == self.side and
+                other.symbol == self.symbol
         )
 
     def __hash__(self):
@@ -100,6 +100,48 @@ class Option:
             Side(side),
             Symbol(symbol)
         )
+
+
+def read_order_book_from_csv(filename) -> list[Option]:
+    df = pd.read_csv(filename)
+
+    order_book = []
+    for i, row in df.iterrows():
+        order_book += [Option.make(row.price, row.qnty, row.side, row.symbol)]
+
+    return order_book
+
+
+def read_order_book_from_dict(data):
+    order_book = []
+    for option in data:
+        order_book += [Option.make(option["price"], option["qnty"], option["side"], option["symbol"])]
+
+    return order_book
+
+
+def read_options_from_csv(filename):
+    df = pd.read_csv(filename)
+
+    options = []
+    for i, row in df.iterrows():
+        options.append(row.to_dict())
+
+    return options
+
+
+def group_trading_options_by_expiry_date(trading_options: list[dict]) -> dict:
+    grouped = {}
+    for opt in trading_options:
+        # extract expiration date from option
+        expiry_date = Symbol(opt["symbol"]).expiry
+
+        # append to array or create array where key is the expiry_date
+        if expiry_date in grouped:
+            grouped[expiry_date].append(opt)
+        else:
+            grouped[expiry_date] = [opt]
+    return grouped
 
 
 class OptionSelector:
