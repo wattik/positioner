@@ -116,6 +116,11 @@ class SimulationResult:
     total_budget: float
     final_account: float
     pandl: float
+    performance: float
+    fail_rate: float
+
+    def to_df(self):
+        return self.history.to_df()
 
     @classmethod
     def from_history(cls, history: Recorder):
@@ -124,4 +129,6 @@ class SimulationResult:
             history.last.total_budget,
             history.last.account,
             history.last.final_pandl,
+            1 + history.last.final_pandl / history.last.total_budget,
+            1 - sum(history["is_optimal"]) / len(history)
         )

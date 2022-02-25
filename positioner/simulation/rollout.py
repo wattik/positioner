@@ -11,9 +11,6 @@ def simulate(
     timestamps: list,
     total_budget: float,
     final_index_price: float = None,
-    max_shift: float = 10_000,
-    maximal_relative_loss: float = -0.1,
-    loss_space_delta: float = 0.7,
     single_strategy=single_strategy,
     **kwargs
 ) -> SimulationResult:
@@ -31,9 +28,6 @@ def simulate(
             order_book=order_book,
             index_price=index_price,
             additional_budget=budget_delta,
-            max_shift=max_shift,
-            maximal_relative_loss=maximal_relative_loss,
-            loss_space_delta=loss_space_delta,
             timestamp=ts,
             **kwargs
         )

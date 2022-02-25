@@ -25,7 +25,7 @@ def compute_strategy(
     historical_orders: list[Order] = None,
     # Contingency Space
     contingency_space_delta: float = 0.7,
-    loss_space_bounds: tuple[float] = None,
+    contingency_space_bounds: tuple[float] = None,
     # Max Loss Policy
     use_max_loss_policy: bool = True,
     maximal_absolute_loss: float = None,
@@ -100,7 +100,7 @@ def compute_strategy(
             )
         )
 
-    contingency_space = space_by_index_price(index_price, delta=contingency_space_delta, bounds=loss_space_bounds, n=600)
+    contingency_space = space_by_index_price(index_price, delta=contingency_space_delta, bounds=contingency_space_bounds, n=600)
 
     if use_max_loss_policy:
         strategy_comp.specify(

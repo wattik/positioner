@@ -31,6 +31,8 @@ class Recorder:
     def __iter__(self):
         return iter(self.__history__)
 
+    def __len__(self):
+        return len(self.__history__)
 
 class StatsComputer:
     def __init__(self, final_index_price: float):
