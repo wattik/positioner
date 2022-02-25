@@ -1,8 +1,10 @@
+from collections import Callable
+from itertools import chain
+
 import numpy as np
-import modelling as ml
 
 from positioner.components.order import Order
-from positioner.pandl import future_expenses, immediate_pandl, total_pandl, value
+from positioner.pandl import future_expenses, future_transactions, immediate_transactions, value
 from positioner.pandl.cache import PandLCache
 from positioner.solver.problem import State
 
@@ -46,42 +48,144 @@ to expenses, we must use a sign.
 """
 
 
-class MaxRelativeLossPolicy:
-    def __init__(self, max_relative_loss: float, total_budget: float, budget: float, current_price: float,
-                 space: np.ndarray, initial_position: list[Order]):
+class MaxLossPolicy:
+    def __init__(self, total_budget: float, budget: float, current_price: float, space: np.ndarray,
+                 initial_position: list[Order], max_relative_loss: float = None, max_absolute_loss: float = None):
         self.current_price = current_price
         self.budget = budget
-        self.max_relative_loss = max_relative_loss
+        self.max_absolute_loss = max_absolute_loss or max_relative_loss * total_budget
         self.space = space
         self.total_budget = total_budget
         self.initial_position = initial_position
 
     def __call__(self, state: State):
         cache = PandLCache()
-        value_c = cache.precompute(value, self.initial_position, self.space)
-        total_pandl_c = cache.precompute(total_pandl, state.vars.all_to_open(), self.space)
-        immediate_pandl_c = cache.precompute(immediate_pandl, state.vars.all_to_close(), self.space)
-        future_expenses_c = cache.precompute(future_expenses, state.vars.all_to_close(), self.space)
+        future_transactions_c = cache.precompute(
+            future_transactions,
+            chain(self.initial_position, state.vars.all_to_open),
+            self.space
+        )
+        value_c = cache.precompute(value, state.vars.all_to_close, self.space)
+        future_expenses_c = cache.precompute(future_expenses, state.vars.all_to_close, self.space)
+
+        pandl_base = state.lp_context.new_linear_combination()
+        for option, amount in state.vars.all.items():
+            pandl_base.add(amount, (immediate_transactions(option, self.current_price) / option.price))
 
         # Constrain so that all p&l over points in ins >= maximal relative loss * expenses
         for future_price in self.space:
-            pandl_base = (
+            pandl = pandl_base.fork()
+            pandl.offset = (
                 self.budget - self.total_budget
-                + sum(value_c(order, future_price) for order in self.initial_position)
+                + sum(future_transactions_c(order, future_price) for order in self.initial_position)
             )
 
-            terms = ml.LinearCombination()
+            for option, amount in state.vars.all_to_open.items():
+                pandl.add(amount, (future_transactions_c(option, future_price) / option.price))
 
-            for option, amount in state.vars.all_to_open().items():
-                terms.add(amount, (total_pandl_c(option, future_price) / option.price))
-
-            for option, amount in state.vars.all_to_close().items():
-                terms.add(amount, (immediate_pandl_c(option, future_price) / option.price))
-
+            for option, amount in state.vars.all_to_close.items():
+                pandl.add(amount, (value_c(option, future_price) / option.price))
                 # correcting the exercise fee for position options that has not been matched
-                terms.add(amount, (future_expenses_c(option, future_price) / option.price))
-
-            terms.offset = pandl_base
+                pandl.add(amount, (future_expenses_c(option, future_price) / option.price))
 
             #   -a * expenses(s) <= value(s, p) - total_budget
-            state.constrain(self.max_relative_loss * self.total_budget, terms)
+            state.constrain(self.max_absolute_loss, pandl)
+
+
+class LowerBoundLossPolicy:
+    def __init__(self, total_budget: float, budget: float, current_price: float, space: np.ndarray,
+                 initial_position: list[Order], lower_bound_func: Callable[[np.ndarray, float], np.ndarray]):
+        self.current_price = current_price
+        self.budget = budget
+        self.lower_bound = lower_bound_func(space, current_price)
+        self.space = space
+        self.total_budget = total_budget
+        self.initial_position = initial_position
+
+    def __call__(self, state: State):
+        cache = PandLCache()
+        future_transactions_c = cache.precompute(
+            future_transactions,
+            chain(self.initial_position, state.vars.all_to_open),
+            self.space
+        )
+        value_c = cache.precompute(value, state.vars.all_to_close, self.space)
+        future_expenses_c = cache.precompute(future_expenses, state.vars.all_to_close, self.space)
+
+        pandl_base = state.lp_context.new_linear_combination()
+        for option, amount in state.vars.all.items():
+            pandl_base.add(amount, (immediate_transactions(option, self.current_price) / option.price))
+
+        # Constrain so that all p&l over points in ins >= maximal relative loss * expenses
+        for lb, future_price in zip(self.lower_bound, self.space):
+            pandl = pandl_base.fork()
+            pandl.offset = (
+                self.budget - self.total_budget
+                + sum(future_transactions_c(order, future_price) for order in self.initial_position)
+            )
+
+            for option, amount in state.vars.all_to_open.items():
+                pandl.add(amount, (future_transactions_c(option, future_price) / option.price))
+
+            for option, amount in state.vars.all_to_close.items():
+                pandl.add(amount, (value_c(option, future_price) / option.price))
+                # correcting the exercise fee for position options that has not been matched
+                pandl.add(amount, (future_expenses_c(option, future_price) / option.price))
+
+            #   lb(p) <= value(s, p) - total_budget
+            state.constrain(lb, pandl)
+
+
+class ImprovingPandlPolicy:
+    def __init__(self, total_budget: float, budget: float, current_price: float, space: np.ndarray,
+                 initial_position: list[Order], maximal_absolute_loss: float, discount_rate: float = None):
+        self.discount_rate = discount_rate or 0.9
+        self.maximal_absolute_loss = maximal_absolute_loss
+        self.current_price = current_price
+        self.budget = budget
+        self.space = space
+        self.total_budget = total_budget
+        self.initial_position = initial_position
+
+    def __call__(self, state: State):
+        hard_stop = np.ones_like(self.space) * self.maximal_absolute_loss
+
+        if not self.initial_position:
+            lower_bound = hard_stop
+        else:
+            lower_bound = (
+                np.ones_like(self.space) * (self.budget - self.total_budget)
+                + sum(future_transactions(order, self.space) for order in self.initial_position)
+            )
+            discounted = (lower_bound - hard_stop) * self.discount_rate + hard_stop
+            lower_bound = np.maximum(discounted, hard_stop)
+
+        cache = PandLCache()
+        future_transactions_c = cache.precompute(
+            future_transactions,
+            chain(self.initial_position, state.vars.all_to_open),
+            self.space
+        )
+        value_c = cache.precompute(value, state.vars.all_to_close, self.space)
+        future_expenses_c = cache.precompute(future_expenses, state.vars.all_to_close, self.space)
+
+        pandl_base = state.lp_context.new_linear_combination()
+        for option, amount in state.vars.all.items():
+            pandl_base.add(amount, (immediate_transactions(option, self.current_price) / option.price))
+
+        for lb, future_price in zip(lower_bound, self.space):
+            pandl = pandl_base.fork()
+            pandl.offset = (
+                self.budget - self.total_budget
+                + sum(future_transactions_c(order, future_price) for order in self.initial_position)
+            )
+
+            for option, amount in state.vars.all_to_open.items():
+                pandl.add(amount, (future_transactions_c(option, future_price) / option.price))
+
+            for option, amount in state.vars.all_to_close.items():
+                pandl.add(amount, (value_c(option, future_price) / option.price))
+                pandl.add(amount, (future_expenses_c(option, future_price) / option.price))
+
+            #   lb(p) <= value(s, p) - total_budget
+            state.constrain(lb, pandl)

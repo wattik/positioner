@@ -42,7 +42,7 @@ def clean_order_book_from_costly_trades(order_book: list[Option], budget: float)
 
 
 @collector(list)
-def clean_order_book_from_position(order_book: list[Option], position: list[Order]) -> list[Option]:
+def clean_order_book_from_history(order_book: list[Option], position: list[Order]) -> list[Option]:
     position_quantities = PositionQuantities(position, attrgetter("symbol", "side", "price"))
 
     for option in order_book:

@@ -1,40 +1,44 @@
 from dataclasses import dataclass
+from enum import Enum
+
 import numpy as np
 
 
 class Variable:
-    def __init__(self, name: str, lower_bound: float, upper_bound: float):
+    def __init__(self, id: int, name: str = None, lower_bound: float = -np.inf, upper_bound: float = np.inf):
         self.name = name
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
         self.value = None
 
+        self.__id__ = id
+        self.__hash_mem__ = None
+
+    def __repr__(self):
+        return f"<Var {self.name}>"
+
     def __eq__(self, other):
-        return other.name == self.name
+        return other.__id__ == self.__id__
 
     def __hash__(self):
-        return hash(self.name)
+        if self.__hash_mem__ is None:
+            self.__hash_mem__ = hash(self.__id__)
+        return self.__hash_mem__
 
     def __lt__(self, other):
-        return self.name.__lt__(other.name)
+        return self.__id__ < other.__id__
 
 
 class LinearCombination:
-    def __init__(self, vars=None, cons=None):
-        self.variables: list[Variable] = vars or []
-        self.constants: list[float] = cons or []
-        self.offset: float = 0.0
+    def __init__(self, n_variables: int = None, cons=None):
+        self.constants: list[float] = cons or [0] * n_variables
+        self.offset: float = 0
+
+    def fork(self):
+        return LinearCombination(cons=self.constants[:])
 
     def add(self, variable: Variable, constant: float):
-        self.variables.append(variable)
-        self.constants.append(constant)
-
-    def to_dict(self):
-        return dict(zip(self.variables, self.constants))
-
-    def reorded(self, keys: list[Variable]):
-        d = self.to_dict()
-        return [d.get(k, 0.0) for k in keys]
+        self.constants[variable.__id__] += constant
 
 
 class Constraint:
@@ -42,48 +46,63 @@ class Constraint:
         assert isinstance(left, LinearCombination) != isinstance(right, LinearCombination)
 
         if isinstance(left, LinearCombination):
-            self.left = LinearCombination(left.variables, left.constants)
+            self.left = LinearCombination(cons=left.constants)
             self.right = right - left.offset
 
         else:
-            self.left = LinearCombination(right.variables, [-v for v in right.constants])
+            self.left = LinearCombination(cons=[-v for v in right.constants])
             self.right = right.offset - left
 
 
-class Model:
-    def __init__(self, sense="maximize"):
-        assert sense == "maximize"
+class Sense(Enum):
+    MAXIMIZE = "maximize"
+    MINIMIZE = "minimize"
+
+
+@dataclass
+class ProblemDefinition:
+    c: np.ndarray
+    A: np.ndarray
+    b: np.ndarray
+    l: np.ndarray
+    u: np.ndarray
+    vars: list[Variable]
+
+
+class LPContext:
+    def __init__(self, sense=Sense.MAXIMIZE):
+        self.sense = sense
 
         self.constrains: list[Constraint] = []
         self.obj: LinearCombination = None
 
+        self.variables: list[Variable] = []
+
+    def new_variable(self, name: str, lower_bound: float = -np.inf, upper_bound: float = np.inf):
+        i = len(self.variables)
+        var = Variable(i, name=name, lower_bound=lower_bound, upper_bound=upper_bound)
+        self.variables.append(var)
+        return var
+
+    def new_linear_combination(self):
+        return LinearCombination(n_variables=len(self.variables))
+
     def constrain(self, left_side, right_side):
-        """Constraint: X <= A"""
+        """Constraint: left <= right"""
         self.constrains.append(Constraint(left_side, right_side))
 
     def objective(self, obj):
         self.obj = obj
 
-    def variables(self) -> list[Variable]:
-        vars = set()
-
-        if self.obj:
-            vars |= set(self.obj.variables)
-
-        for con in self.constrains:
-            vars |= set(con.left.variables)
-
-        return sorted(vars)
-
-    def matrices(self):
+    def problem_definition(self) -> ProblemDefinition:
         """
-        Returns matrices c, A, b, l, u
+        Returns problem_definition c, A, b, l, u
         """
         assert self.obj is not None
 
-        vars = self.variables()
+        vars = self.variables[:]
 
-        c = np.asarray(self.obj.reorded(vars))
+        c = np.asarray(self.obj.constants)
         l = np.asarray([v.lower_bound for v in vars])
         u = np.asarray([v.upper_bound for v in vars])
 
@@ -91,10 +110,10 @@ class Model:
         b = np.zeros(len(self.constrains))
 
         for i, con in enumerate(self.constrains):
-            A[i, :] = np.asarray(con.left.reorded(vars))
-            b[i] = float(con.right)
+            A[i, :] = np.asarray(con.left.constants)
+            b[i] = con.right
 
-        return c, A, b, l, u
+        return ProblemDefinition(c, A, b, l, u, vars)
 
 
 @dataclass

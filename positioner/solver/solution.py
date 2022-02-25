@@ -3,9 +3,8 @@ from functools import cached_property
 from operator import attrgetter
 
 from positioner.components.order import Order
-from positioner.functional.order import remove_below_quantity
+from positioner.functional.order import aggregate_orders, divide_orders_by_side, remove_below_quantity
 from positioner.pandl import immediate_expenses, revenue
-from positioner.solver.utils import divide_orders_by_side
 from positioner.utils.functools import groupby
 
 
@@ -46,7 +45,7 @@ class Strategy:
 
     @cached_property
     def position(self):
-        return match_orders(self.initial_position + self.trade_orders)
+        return aggregate_orders(match_orders(self.initial_position + self.trade_orders))
 
     @cached_property
     def sell_profit(self):

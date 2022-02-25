@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
-from functools import cached_property, total_ordering
+from functools import cached_property
 from operator import attrgetter
 
 from positioner.utils.functools import groupby
@@ -59,6 +59,8 @@ class Option:
     side: Side
     symbol: Symbol
 
+    __hash_mem__ = None
+
     @property
     def asset(self): return self.symbol.asset
 
@@ -84,7 +86,9 @@ class Option:
         )
 
     def __hash__(self):
-        return hash((self.symbol, self.price, self.quantity, self.side))
+        if self.__hash_mem__ is None:
+            self.__hash_mem__ = hash((self.symbol, self.price, self.quantity, self.side))
+        return self.__hash_mem__
 
     def __repr__(self):
         return f"<Option {self.quantity}BTC {self.symbol}-{self.side} at {self.price:1.3f}USD>"

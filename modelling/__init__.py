@@ -1,3 +1,3 @@
-from .atoms import Variable, LinearCombination, Model, Solution
+from .atoms import LPContext, Solution, Sense
 
 from .solvers import solve_cvxpy
