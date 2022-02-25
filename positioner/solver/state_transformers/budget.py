@@ -1,8 +1,9 @@
+from itertools import chain
+
 import numpy as np
-import pulp
 
 from positioner.components.order import Order
-from positioner.pandl import future_expenses, immediate_allocations, position_margin, total_allocations
+from positioner.pandl import closing_margin, future_expenses, immediate_transactions, order_margin, position_margin
 from positioner.pandl.cache import PandLCache
 from positioner.solver.problem import State
 
@@ -21,22 +22,35 @@ class MaxExpensesPolicy:
 
     def __call__(self, state: State):
         cache = PandLCache()
-        cache.precompute(position_margin, self.initial_position, self.space)
-        cache.precompute(future_expenses, state.vars.all_to_close(), self.space)
+        position_margin_c = cache.precompute(position_margin, self.initial_position, self.space)
+        future_expenses_c = cache.precompute(future_expenses, chain(self.initial_position, state.vars.all), self.space)
+        closing_margin_c = cache.precompute(closing_margin, state.vars.all_to_close, self.space)
+        order_margin_c = cache.precompute(order_margin, state.vars.all_to_open, self.space)
 
-        expenses_base = 0
-        for option, amount in state.vars.all_to_open().items():
-            expenses_base += amount * (total_allocations(option, self.current_price) / option.price)
+        expenses_base = state.lp_context.new_linear_combination()
+        for option, amount in state.vars.all_to_close.items():
+            expenses_base.add(amount, (-immediate_transactions(option, self.current_price) / option.price))
 
-        for option, amount in state.vars.all_to_close().items():
-            expenses_base += amount * (immediate_allocations(option, self.current_price) / option.price)
+        for option, amount in state.vars.buy_to_open.items():
+            expenses_base.add(amount, (-immediate_transactions(option, self.current_price) / option.price))
 
-        for x in self.space:
-            expenses = [expenses_base]
-            expenses += [sum(cache.wrap(position_margin)(order, x) for order in self.initial_position)]
 
-            for option, amount in state.vars.all_to_close().items():
+        # TODO: make the expressions more compact to speed the problem setup
+        for future_price in self.space:
+            expenses = expenses_base.fork()
+            expenses.offset = sum(position_margin_c(order, future_price) for order in self.initial_position)
+            expenses.offset += sum(future_expenses_c(order, future_price) for order in self.initial_position)
+
+            for option, amount in state.vars.sell_to_open.items():
+                # order margin already takes into account cost and transaction fee
+                expenses.add(amount, order_margin_c(option, future_price) / option.price)
+
+            for option, amount in state.vars.all_to_open.items():
+                expenses.add(amount, future_expenses_c(option, future_price) / option.price)
+
+            for option, amount in state.vars.all_to_close.items():
+                expenses.add(amount, -closing_margin_c(option, future_price) / option.price)
                 # This here signals expenses are decreased by closing an option since no exercise fee is payed
-                expenses += [amount * (-cache.wrap(future_expenses)(option, x) / option.price)]
+                expenses.add(amount, -future_expenses_c(option, future_price) / option.price)
 
-            state.constrain(pulp.lpSum(expenses) <= self.budget)
+            state.constrain(expenses, self.budget)

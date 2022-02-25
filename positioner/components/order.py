@@ -14,11 +14,13 @@ class OrderType(Enum):
         return self.name
 
 
-@dataclass(frozen=True)
+@dataclass
 class Order:
     amount: float
     order_type: OrderType
     option: Option
+
+    __hash_mem__ = None
 
     @property
     def price(self):
@@ -40,8 +42,13 @@ class Order:
     def quantity(self):
         return self.amount / self.price
 
+    def __hash__(self):
+        if self.__hash_mem__ is None:
+            self.__hash_mem__ = hash((self.amount, self.order_type, self.option))
+        return self.__hash_mem__
+
     def __repr__(self):
-        return f"{self.order_type} {self.amount:1.3f}USD {self.option} at {self.price:1.3f}USD"
+        return f"{self.order_type} {self.quantity:1.3f} ({self.amount:1.3f}USD) {self.option}"
 
     @classmethod
     def make(cls, amount, order_type, option: Option):

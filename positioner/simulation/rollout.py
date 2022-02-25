@@ -11,11 +11,8 @@ def simulate(
     timestamps: list,
     total_budget: float,
     final_index_price: float = None,
-    max_shift: float = 10_000,
-    maximal_relative_loss: float = -0.1,
-    loss_space_delta: float = 0.7,
     single_strategy=single_strategy,
-    use_max_relative_loss_policy=True
+    **kwargs
 ) -> SimulationResult:
     assert len(index_prices) == len(order_books)
     n_steps = len(order_books)
@@ -31,11 +28,8 @@ def simulate(
             order_book=order_book,
             index_price=index_price,
             additional_budget=budget_delta,
-            max_shift=max_shift,
-            maximal_relative_loss=maximal_relative_loss,
-            loss_space_delta=loss_space_delta,
             timestamp=ts,
-            use_max_relative_loss_policy=use_max_relative_loss_policy
+            **kwargs
         )
 
     return simulator.finalize(final_index_price)
