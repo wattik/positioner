@@ -76,11 +76,11 @@ class Option:
 
     def __eq__(self, other):
         return (
-            isinstance(other, Option) and
-            other.price == self.price and
-            other.quantity == self.quantity and
-            other.side == self.side and
-            other.symbol == self.symbol
+                isinstance(other, Option) and
+                other.price == self.price and
+                other.quantity == self.quantity and
+                other.side == self.side and
+                other.symbol == self.symbol
         )
 
     def __hash__(self):
@@ -142,6 +142,7 @@ def group_trading_options_by_expiry_date(trading_options: list[dict]) -> dict:
         else:
             grouped[expiry_date] = [opt]
     return grouped
+
 
 class OptionSelector:
     def __init__(self, options: list[Option]):
