@@ -116,7 +116,7 @@ class SimulationResult:
     total_budget: float
     final_account: float
     pandl: float
-    performance: float
+    profitability: float
     fail_rate: float
 
     def to_df(self):

@@ -18,7 +18,6 @@ def compute_strategy(
     order_book: list[Option],
     index_price: float,
     budget: float,
-    /,
     expected_index_price: float = None,
     total_budget: float = None,
     initial_position: list[Order] = None,
@@ -36,14 +35,13 @@ def compute_strategy(
     use_lower_bound_loss_policy: bool = False,
     lower_bound_functor: Callable = None,
     # Loss Improving Policy
-    use_improving_pandl_policy: bool = False,
+    use_loss_improving_policy: bool = False,
     improving_discount_rate: float = None,
     # Objective Type
     objective_type: Literal["expected_pandl", "min_pandl"] = "expected_pandl",
     max_shift: float = 10_000,
     objective_relative_bounds: tuple[float] = None,
     objective_absolute_bounds: tuple[float] = None,
-    *,
     use_clean_from_costly_trades: bool = True,
 ) -> Strategy:
     expected_index_price = expected_index_price or index_price
@@ -121,7 +119,7 @@ def compute_strategy(
             )
         )
 
-    if use_improving_pandl_policy:
+    if use_loss_improving_policy:
         strategy_comp.specify(
             ImprovingPandlPolicy(
                 total_budget=total_budget, space=contingency_space,
