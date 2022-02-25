@@ -3,7 +3,7 @@ import asyncio
 import aiohttp
 
 from positioner.collection.api import get_options_info
-from positioner.orderbook import Symbol
+from positioner.components.option import Symbol
 
 
 async def a_collect_traded_option_symbols(expiry_date=None):
@@ -45,4 +45,3 @@ async def collect_traded_option_symbols_mapped() -> list[Symbol]:
         for symbol in str_symbols
     )
     return symbols
-

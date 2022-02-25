@@ -17,5 +17,6 @@ setup(
         "python-telegram-bot",
         "flask",
         "pymongo"
+        "namespaces"
     ]
 )
