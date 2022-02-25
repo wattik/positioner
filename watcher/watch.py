@@ -32,7 +32,6 @@ def write_csv(options: dict, index_price: float):
 def persist_orderbook(grouped_options: dict, index_price: float, orderbook_mapper: OrderbookMapper):
     now = datetime.now()
     dt_string = now.strftime("%Y-%m-%d-%H-%M-%S")
-    print("GROUPPED OPTIONS", grouped_options)
     for expiry_date, options in grouped_options.items():
         print(f"Saving order book with expiry date {expiry_date} and {len(options)} options. Collected at {now}")
         order_book = {
