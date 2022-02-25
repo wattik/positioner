@@ -1,12 +1,14 @@
-from pprint import pprint
-
 from pymongo import MongoClient
-
-from persistence.mappers.strategy_mapper import StrategyMapper
+from persistence.mappers.orderbook_mapper import OrderbookMapper
 from utils import config
 
+
+class Database:
+    def __init__(self):
+        conn_string = config.default("persistence", "mongo_conn_string")
+        self.client = MongoClient(conn_string)
+
+
 if __name__ == '__main__':
-    conn_string = config.default("persistence", "mongo_conn_string")
-    client = MongoClient(conn_string)
-    sm = StrategyMapper(client)
-    pprint(sm.collection.find_one())
+    db = Database()
+    om = OrderbookMapper(db.client)
