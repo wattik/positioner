@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property, total_ordering
 from operator import attrgetter
-
+import pandas as pd
 from positioner.utils.functools import groupby
 
 

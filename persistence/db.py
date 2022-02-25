@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 from persistence.mappers.orderbook_mapper import OrderbookMapper
-from utils import config
+from positioner import config
 
 
 class Database:

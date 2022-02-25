@@ -1,10 +1,7 @@
 from abc import ABC, abstractmethod
-
 from pymongo import MongoClient
-from pymongo.results import InsertOneResult, InsertManyResult
-
-from utils import config
 from typing import TypeVar, Generic, Union, Any
+from positioner import config
 
 T = TypeVar("T")
 

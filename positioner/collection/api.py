@@ -4,6 +4,7 @@ from datetime import datetime
 OPTION_URL_BASE = "https://vapi.binance.com"
 SPOT_URL_BASE = "https://api.binance.com"
 
+
 async def fetch(session: aiohttp.ClientSession, url, params=None):
     async with session.get(url, params=params, ssl=False) as response:
         assert response.status == 200, response.status
@@ -32,9 +33,12 @@ async def get_current_index_price(session, underlying=None):
     index_price = data.get("args", {})
     return index_price["indexPrice"]
 
+
 """
 With precision to 1 minute, computes approximate historical symbol price at `time`. 
 """
+
+
 async def get_historical_index_price(session, dt: datetime, symbol=None):
     params = dict(
         symbol=symbol or "BTCUSDT",
