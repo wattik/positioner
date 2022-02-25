@@ -100,6 +100,9 @@ async def main():
 
             # pause the loop for 10 mins
             await asyncio.sleep(60 * 10)
+        except KeyError as e:
+            print("Key error", e)
+            await asyncio.sleep(5)
         except:
             print("Unexpected error:", sys.exc_info()[0])
             # pause the loop for 1 min and retry
