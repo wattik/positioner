@@ -38,3 +38,11 @@ The standard output should show solver logs and a position of a single order:
 ```shell
 [OrderType.BUY 20.000USD BTC-210409-62000-C-Side.ASK at 674.560USD]
 ```
+
+
+## Sync with upstream
+```
+git fetch upstream
+git checkout master
+git merge upstream/master
+```
