@@ -11,3 +11,5 @@ outputs
 flask-api/downloads
 output.log
 build/*/**
+wandb
+
