@@ -30,8 +30,10 @@ async def get_current_index_price(session, underlying=None):
     underlying = underlying or "BTCUSDT"
 
     data = await fetch(session, OPTION_URL_BASE + "/vapi/v1/index", params={"underlying": underlying})
-    index_price = data.get("args", {})
-    return index_price["indexPrice"]
+    return data["data"]["indexPrice"]
+    # print("INDEX PRICE", data["data"]["indexPrice"])
+    # index_price = data.get("args", {})
+    # return index_price["indexPrice"]
 
 
 """
