@@ -21,7 +21,7 @@ def solve_cvxpy(model: LPContext) -> Solution:
 
     problem = cp.Problem(sense(c @ x), constraints)
     try:
-        problem.solve(solver=cp.GLPK)
+        problem.solve(solver=cp.GLPK, verbose=False)
         optimality = problem.status == cp.OPTIMAL
         message = problem.status
     except cp.SolverError as err:

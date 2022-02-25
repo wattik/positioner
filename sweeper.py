@@ -1,10 +1,9 @@
 import logging
-from datetime import datetime
 from pprint import pformat
 
 import pandas as pd
-import wandb
 
+import wandb
 from positioner.remotedata.fetch import fetch_option_groups, fetch_order_books
 from positioner.simulation.rollout import simulate
 
@@ -15,27 +14,25 @@ def to_sim_params(conf: dict, start_price) -> dict:
 
     if conf["contingency_space_type"] == "absolute":
         p["contingency_space_bounds"] = (
-            start_price * conf["contingency_space_lb"],
-            start_price * conf["contingency_space_ub"]
+            start_price * (1 - conf["contingency_space_delta"]),
+            start_price * (1 + conf["contingency_space_delta"])
         )
     elif conf["contingency_space_type"] == "relative":
         p["contingency_space_delta"] = conf["contingency_space_delta"]
     else:
         raise ValueError(conf["contingency_space_type"])
 
-    p["use_max_loss_policy"] = conf["use_max_loss_policy"]
-    if conf["use_max_loss_policy"]:
+    if conf["loss_policy_type"] == "threshold":
+        p["use_max_loss_policy"] = True
         if conf["max_loss_policy_type"] == "absolute":
             p["maximal_absolute_loss"] = conf["maximal_absolute_loss"]
         elif conf["max_loss_policy_type"] == "relative":
             p["maximal_relative_loss"] = conf["maximal_relative_loss"]
         else:
             raise ValueError(conf["max_loss_policy_type"])
-
-    p["use_loss_improving_policy"] = conf["use_loss_improving_policy"]
-    if conf["use_loss_improving_policy"]:
+    elif conf["loss_policy_type"] == "improving":
+        p["use_loss_improving_policy"] = True
         p["maximal_absolute_loss"] = conf["maximal_absolute_loss"]
-        p["use_loss_improving_policy"] = conf["use_loss_improving_policy"]
         p["improving_discount_rate"] = conf["improving_discount_rate"]
 
     p["objective_type"] = conf["objective_type"]
@@ -44,8 +41,8 @@ def to_sim_params(conf: dict, start_price) -> dict:
     elif conf["objective_type"] == "min_pandl":
         if conf["min_pandl_space_type"] == "absolute":
             p["objective_absolute_bounds"] = (
-                start_price * conf["objective_absolute_lb"],
-                start_price * conf["objective_absolute_ub"]
+                start_price * (1 - conf["objective_absolute_delta"]),
+                start_price * (1 + conf["objective_absolute_delta"])
             )
         elif conf["min_pandl_space_type"] == "relative":
             p["objective_relative_bounds"] = conf["objective_relative_bounds"]
@@ -83,7 +80,8 @@ def simulate_option_group(option_group: str, config: dict):
 
 
 def run(default_config: dict):
-    option_groups = fetch_option_groups(default_config["experiment_last_group"])
+    option_groups = fetch_option_groups(default_config["experiment_first_group"],
+                                        default_config["experiment_last_group"])
 
     wandb.init(project="test-project", config=default_config)
     config = wandb.config
@@ -94,16 +92,24 @@ def run(default_config: dict):
     logging.info("=" * 50)
 
     results = []
-
+    datas = []
     for og in option_groups:
         logging.info(f"Processing: {og}")
         res = simulate_option_group(og, config)
+
+        df = res.to_df()
+        df["option_group"] = og
+        # Strigify the following as non-json objects are not suported by wandb.Table
+        df["position"] = list(map(repr, df["position"]))
+        df["trade_orders"] = list(map(repr, df["trade_orders"]))
+        datas.append(df)
 
         results.append(dict(
             option_group=og,
             profitability=res.profitability,
             fail_rate=res.fail_rate,
         ))
+
     df = pd.DataFrame(results)
 
     wandb.log(dict(
@@ -112,7 +118,8 @@ def run(default_config: dict):
         profitability_min=df["profitability"].min(),
         profitability_max=df["profitability"].max(),
         profitability_compound=df["profitability"].product(),
-        fail_rate_mean=df["fail_rate"].mean()
+        fail_rate_mean=df["fail_rate"].mean(),
+        data=wandb.Table(dataframe=pd.concat(datas))
     ))
 
 
@@ -120,19 +127,18 @@ if __name__ == '__main__':
     logging.basicConfig(level="INFO")
     config = dict(
         total_budget=1000,
-        max_steps=50,
+        max_steps=10,
         contingency_space_type="absolute",
-        contingency_space_lb=0.3,
-        contingency_space_ub=0.7,
-        use_max_loss_policy=False,
-        use_loss_improving_policy=True,
+        contingency_space_delta=0.7,
+        loss_policy_type="improving",
+        max_loss_policy_type="absolute",
         maximal_absolute_loss=-10,
         improving_discount_rate=0.90,
         objective_type="min_pandl",
         min_pandl_space_type="absolute",
-        objective_absolute_lb=0.6,
-        objective_absolute_ub=1.4,
-        experiment_last_group="BTC-210531"
+        objective_absolute_delta=0.4,
+        experiment_first_group="BTC-210507",
+        experiment_last_group="BTC-220201",
     )
 
     run(config)

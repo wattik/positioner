@@ -146,10 +146,3 @@ def group_trading_options_by_expiry_date(trading_options: list[dict]) -> dict:
         else:
             grouped[expiry_date] = [opt]
     return grouped
-
-
-class OptionSelector:
-    def __init__(self, options: list[Option]):
-        self.by_symbol = dict(groupby(attrgetter("symbol"), options, with_keys=True))
-        self.by_side = dict(groupby(attrgetter("side"), options, with_keys=True))
-        self.by_symbol_side = dict(groupby(attrgetter("symbol", "side"), options, with_keys=True))

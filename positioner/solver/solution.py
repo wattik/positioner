@@ -49,12 +49,12 @@ class Strategy:
 
     @cached_property
     def sell_profit(self):
-        return revenue(self.trade_orders, self.index_price)
+        return float(revenue(self.trade_orders, self.index_price))
 
     @cached_property
     def expenses(self):
-        return immediate_expenses(self.trade_orders, self.index_price)
+        return float(immediate_expenses(self.trade_orders, self.index_price))
 
     @cached_property
     def account(self):
-        return self.budget + self.sell_profit - self.expenses
+        return float(self.budget + self.sell_profit - self.expenses)
