@@ -30,7 +30,7 @@ def main():
 
     prices_chunks = []
     for dts_chunk in progressbar(list(chunkate(dts, 50))):
-        prices = chain(collect_historical_inxdex_prices(dts_chunk, symbol=symbol))
+        prices = chain(collect_historical_index_prices(dts_chunk, symbol=symbol))
         sleep(1)
         prices_chunks += [prices]
 
