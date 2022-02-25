@@ -34,7 +34,7 @@ def persist_orderbook(grouped_options: dict, index_price: float, orderbook_mappe
     dt_string = now.strftime("%Y-%m-%d-%H-%M-%S")
 
     for expiry_date, options in grouped_options.items():
-        # print(f"Order book with expiry date {expiry_date} has {len(options)} options. Collected at {start_date}")
+        print(f"Saving order book with expiry date {expiry_date} and {len(options)} options. Collected at {now}")
         order_book = {
             "option_group": f"BTC-{expiry_date}",
             "options": options,
