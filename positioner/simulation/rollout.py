@@ -1,3 +1,5 @@
+from typing import Iterable
+
 from tqdm import tqdm
 
 from positioner.components.option import Option
@@ -6,7 +8,7 @@ from .rollout_simulator import RolloutSimulator, SimulationResult
 
 
 def simulate(
-    order_books: list[list[Option]],
+    order_books: Iterable[list[Option]],
     index_prices: list[float],
     timestamps: list,
     total_budget: float,
@@ -14,8 +16,7 @@ def simulate(
     single_strategy=single_strategy,
     **kwargs
 ) -> SimulationResult:
-    assert len(index_prices) == len(order_books)
-    n_steps = len(order_books)
+    n_steps = len(timestamps)
     final_index_price = final_index_price or index_prices[-1]
     simulator = RolloutSimulator(single_strategy)
 
@@ -23,7 +24,7 @@ def simulate(
     budget_delta = total_budget / n_steps
 
     items = zip(timestamps, order_books, index_prices)
-    for ts, order_book, index_price in tqdm(items, total=len(index_prices)):
+    for ts, order_book, index_price in tqdm(items, total=len(timestamps)):
         simulator.step(
             order_book=order_book,
             index_price=index_price,

@@ -1,4 +1,5 @@
 import logging
+from itertools import islice
 from pprint import pformat
 
 import pandas as pd
@@ -59,9 +60,9 @@ def simulate_option_group(option_group: str, config: dict):
 
     order_books, index_prices, timestamps = fetch_order_books(option_group)
 
-    stride = len(order_books) // max_steps + 1
+    stride = len(timestamps) // max_steps + 1
 
-    order_books = order_books[::stride]
+    order_books = islice(order_books, None, None, stride)
     index_prices = index_prices[::stride]
     timestamps = timestamps[::stride]
 

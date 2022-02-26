@@ -8,26 +8,41 @@ from positioner.components.option import Option
 def fetch_order_books(option_group):
     db = Database()
     orderbook_mapper = OrderbookMapper(db.client)
-    cur = orderbook_mapper.collection.find({"option_group": option_group})
 
-    order_books = []
-    prices = []
-    timestamps = []
-    for orderbook_raw in cur:
-        options_raw = orderbook_raw["options"]
-        price = orderbook_raw["index_price"]
-        ts = orderbook_raw["created_at"]
+    def extract_timestamp(raw):
+        return raw["created_at"]
 
+    def extract_order_book(raw):
+        options_raw = raw["options"]
         order_book = []
         for option_raw in options_raw:
-            option = Option.make(option_raw["price"], option_raw["qnty"], option_raw["side"], option_raw["symbol"])
+            option = Option.make(
+                option_raw["price"], option_raw["qnty"], option_raw["side"], option_raw["symbol"]
+            )
             order_book.append(option)
 
-        order_books.append(order_book)
-        prices.append(price)
-        timestamps.append(ts)
+        del options_raw
+        return order_book
 
-    return order_books, prices, timestamps
+    def extract_index_price(raw):
+        return raw["index_price"]
+
+    timestamps = list(map(
+        extract_timestamp,
+        orderbook_mapper.collection.find({"option_group": option_group}, {"created_at": 1, "_id": False})
+    ))
+
+    index_prices = list(map(
+        extract_index_price,
+        orderbook_mapper.collection.find({"option_group": option_group}, {"index_price": 1, "_id": False})
+    ))
+
+    order_books = map(
+        extract_order_book,
+        orderbook_mapper.collection.find({"option_group": option_group}, {"options": 1, "_id": False})
+    )
+
+    return order_books, index_prices, timestamps
 
 
 def fetch_option_groups(first_group: str, last_group: str, min_expiration_days=20):
