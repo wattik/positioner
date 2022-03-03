@@ -33,7 +33,7 @@ def simulate(
             timestamp=ts,
             **kwargs
         )
-        logging.info(f"Iteration completed ({i}/{len(index_prices)}).")
+        logging.info(f"Iteration completed ({i+1}/{len(index_prices)}).")
 
     results = simulator.finalize(final_index_price)
     logging.info(f"Simulation completed.")
