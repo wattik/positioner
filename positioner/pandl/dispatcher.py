@@ -55,7 +55,7 @@ class EvaluationFuncDispatcher:
         raise ValueError(to_be_valued)
 
     def _dispatch_order_(self, to_be_valued: Order, space: ArrayOrNumber):
-        return to_be_valued.quantity * self(to_be_valued.option, space)
+        return to_be_valued.quantity * self._dispatch_option_(to_be_valued.option, space)
 
     def __call__(self, to_be_valued: Union[Option, Order, list], space: ArrayOrNumber):
         if isinstance(to_be_valued, Order):
