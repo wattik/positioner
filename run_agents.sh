@@ -18,5 +18,5 @@ CMD="wandb agent ${TAG}"
 
 for i in $(seq 1 $N_AGENTS); do
   echo "Launching agent ${i}."
-  nohup $CMD &
+  nohup $CMD
 done
