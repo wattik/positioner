@@ -1,5 +1,6 @@
 import logging
 from itertools import islice
+import numpy as np
 from pprint import pformat
 
 import pandas as pd
@@ -100,9 +101,17 @@ def run(default_config: dict):
 
         df = res.to_df()
         df["option_group"] = og
-        # Strigify the following as non-json objects are not suported by wandb.Table
-        df["position"] = list(map(repr, df["position"]))
-        df["trade_orders"] = list(map(repr, df["trade_orders"]))
+
+        for c in df.columns:
+            el = df.loc[0, c]
+            # np.ndarray: non-json objects are not suported by wandb.Table
+            if isinstance(el, np.ndarray) and el.size <= 1:
+                df[c] = df[c].astype(float)
+
+            # Strigify the following as non-json objects are not suported by wandb.Table
+            if isinstance(el, list):
+                df[c] = list(map(repr, df[c]))
+
         datas.append(df)
 
         results.append(dict(
