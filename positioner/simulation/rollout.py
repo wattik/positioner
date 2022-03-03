@@ -1,6 +1,5 @@
+import logging
 from typing import Iterable
-
-from tqdm import tqdm
 
 from positioner.components.option import Option
 from positioner.solver.solver import compute_strategy as single_strategy
@@ -23,8 +22,10 @@ def simulate(
     # could be computed with a budget policy
     budget_delta = total_budget / n_steps
 
+    logging.info(f"Starting simulation: {len(index_prices)} steps.")
+
     items = zip(timestamps, order_books, index_prices)
-    for ts, order_book, index_price in tqdm(items, total=len(timestamps)):
+    for i, (ts, order_book, index_price) in enumerate(items):
         simulator.step(
             order_book=order_book,
             index_price=index_price,
@@ -32,5 +33,8 @@ def simulate(
             timestamp=ts,
             **kwargs
         )
+        logging.info(f"Iteration completed ({i}/{len(index_prices)}).")
 
-    return simulator.finalize(final_index_price)
+    results = simulator.finalize(final_index_price)
+    logging.info(f"Simulation completed.")
+    return results
