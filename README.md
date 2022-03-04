@@ -46,3 +46,21 @@ git fetch upstream
 git checkout master
 git merge upstream/master
 ```
+
+
+## Run Parameter Sweep
+To run a parameter sweep, set accordingly parameters in `sweep.yaml`. Then create a new sweep:
+```shell
+wandb sweep sweep.yaml
+```
+The command registers the sweep into the wandb database and yields a unique identifier e.g. `ptajman/min_pandl_1000/5uz5flxe` 
+which is used later on to start an agent within the sweep context. 
+
+Modify `docker-compose.yml` and add the unique identifier of the sweep under the `command` key. 
+
+Then launch for example 4 sweep agents (potentially using `sudo`):
+```shell
+ docker-compose up -d --build --scale sweeper=4
+```
+The `-d` starts the containers in background. `--build` rebuilds the source image to ensure it contains all recent modifications.
+`--scale SERVICE=NUM` launches `NUM` replicas of `SERVICE` (defined in `docker-compose.yml`).
