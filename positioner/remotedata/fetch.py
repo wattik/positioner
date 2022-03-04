@@ -29,17 +29,26 @@ def fetch_order_books(option_group):
 
     timestamps = list(map(
         extract_timestamp,
-        orderbook_mapper.collection.find({"option_group": option_group}, {"created_at": 1, "_id": False})
+        orderbook_mapper.collection.find(
+            {"option_group": option_group}, {"created_at": 1, "_id": False}
+        ).sort(
+            "created_at", 1)
     ))
 
     index_prices = list(map(
         extract_index_price,
-        orderbook_mapper.collection.find({"option_group": option_group}, {"index_price": 1, "_id": False})
+        orderbook_mapper.collection.find(
+            {"option_group": option_group}, {"index_price": 1, "_id": False}
+        ).sort(
+            "created_at", 1)
     ))
 
     order_books = map(
         extract_order_book,
-        orderbook_mapper.collection.find({"option_group": option_group}, {"options": 1, "_id": False})
+        orderbook_mapper.collection.find(
+            {"option_group": option_group}, {"options": 1, "_id": False}
+        ).sort(
+            "created_at", 1)
     )
 
     return order_books, index_prices, timestamps
@@ -73,5 +82,6 @@ def fetch_option_groups(first_group: str, last_group: str, min_expiration_days=2
         expiration_days = abs((group_timestamp - first_order_book["created_at"]).days)
         if expiration_days >= min_expiration_days:
             filtered_groups.append(group)
-        # print(f'First order book for {group} with timestamp {group_timestamp} is {first_order_book["created_at"]}. Expires in {expiration_days}')
+        # print(f'First order book for {group} with timestamp {group_timestamp} is {first_order_book["created_at"]}.
+        # Expires in {expiration_days}')
     return filtered_groups
