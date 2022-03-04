@@ -4,6 +4,7 @@ from typing import Iterable
 from positioner.components.option import Option
 from positioner.solver.solver import compute_strategy as single_strategy
 from .rollout_simulator import RolloutSimulator, SimulationResult
+from ..utils.timer import timeit, timer_iter
 
 
 def simulate(
@@ -25,14 +26,16 @@ def simulate(
     logging.info(f"Starting simulation: {len(index_prices)} steps.")
 
     items = zip(timestamps, order_books, index_prices)
+    items = timer_iter(items, "Data Acquiry: next(simulation_date)")
     for i, (ts, order_book, index_price) in enumerate(items):
-        simulator.step(
-            order_book=order_book,
-            index_price=index_price,
-            additional_budget=budget_delta,
-            timestamp=ts,
-            **kwargs
-        )
+        with timeit("Simulation: simulation.step()"):
+            simulator.step(
+                order_book=order_book,
+                index_price=index_price,
+                additional_budget=budget_delta,
+                timestamp=ts,
+                **kwargs
+            )
         logging.info(f"Iteration completed ({i+1}/{len(index_prices)}).")
 
     results = simulator.finalize(final_index_price)
