@@ -1,0 +1,6 @@
+.pytest_cache
+binance-info
+data
+examples
+notebooks
+*.egg-info
