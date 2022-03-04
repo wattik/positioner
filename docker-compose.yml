@@ -1,0 +1,10 @@
+version: "0.1"
+services:
+  sweeper:
+    build: .
+    command: ["wandb", "agent", "ptajman/min_pandl_1000/62qm7dcn"]
+    volumes:
+     - ./wandb:/job/wandb
+    environment:
+      WANDB_API_KEY: abc7a849d5def805be56001abf5129be68e0fa47
+

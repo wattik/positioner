@@ -2,5 +2,6 @@
 binance-info
 data
 examples
+wandb	
 notebooks
 *.egg-info
