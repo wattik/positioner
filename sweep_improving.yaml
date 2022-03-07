@@ -1,6 +1,6 @@
 program: sweeper.py
 method: bayes
-project: min_pandl_1000_threshold
+project: min_pandl_1000_improving
 metric:
   name: profitability_compound
   goal: maximize
