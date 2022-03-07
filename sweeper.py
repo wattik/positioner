@@ -94,31 +94,16 @@ def run(default_config: dict):
     logging.info("=" * 50)
 
     results = []
-    datas = []
-    for og in option_groups:
+    for i, og in enumerate(option_groups):
         logging.info(f"Processing: {og}")
         res = simulate_option_group(og, config)
-
-        df = res.to_df()
-        df["option_group"] = og
-
-        for c in df.columns:
-            el = df.loc[0, c]
-            # np.ndarray: non-json objects are not suported by wandb.Table
-            if isinstance(el, np.ndarray) and el.size <= 1:
-                df[c] = df[c].astype(float)
-
-            # Strigify the following as non-json objects are not suported by wandb.Table
-            if isinstance(el, list):
-                df[c] = list(map(repr, df[c]))
-
-        datas.append(df)
-
         results.append(dict(
             option_group=og,
             profitability=res.profitability,
             fail_rate=res.fail_rate,
         ))
+
+        wandb.log({"group_profitability": res.profitability}, step=i)
 
     df = pd.DataFrame(results)
 
@@ -129,7 +114,6 @@ def run(default_config: dict):
         profitability_max=df["profitability"].max(),
         profitability_compound=df["profitability"].product(),
         fail_rate_mean=df["fail_rate"].mean(),
-        data=wandb.Table(dataframe=pd.concat(datas))
     ))
 
 
