@@ -1,3 +1,4 @@
+import logging
 import time
 from collections import Iterable
 
@@ -10,7 +11,7 @@ class timeit(object):
         self.tstart = time.time()
 
     def __exit__(self, type, value, traceback):
-        print(f"{self.name}: {(time.time() - self.tstart)}")
+        logging.info(f"{self.name}: {(time.time() - self.tstart)}")
 
 
 def timer_iter(it: Iterable, name="timer_iter"):
