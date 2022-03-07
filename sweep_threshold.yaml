@@ -1,24 +1,21 @@
 program: sweeper.py
 method: bayes
-project: min_pandl_1000
+project: min_pandl_1000_threshold
 metric:
-  name: profitability_med
+  name: profitability_compound
   goal: maximize
 parameters:
-  improving_discount_rate:
-    min: 0.01
-    max: 0.99
   objective_absolute_delta:
     min: 0.01
-    max: 0.9
+    max: 0.99
   total_budget:
     value: 1000
   max_steps:
-    values: [10, 100, 1000, 10000]
+    values: [10, 100, 1000]
   loss_policy_type:
-    values: ["improving", "threshold"]
+    value: "threshold"
   maximal_absolute_loss:
-    values: [-1000000, -1000, -100, -10, 0]
+    values: [-1000, -100, -10, 0]
   experiment_first_group:
     value: "BTC-210507"
   experiment_last_group:
