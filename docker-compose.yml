@@ -1,16 +1,10 @@
 version: "3.3"
 services:
-  sweeper_improving:
+  sweeper:
     build: .
-    command: ["wandb", "agent", "ptajman/min_pandl_1000_improving/9ssc7qao"]
+    command: ["wandb", "agent", "ptajman/min_pandl_1000_improving/lv9vgt5c"]
     volumes:
      - ./wandb:/job/wandb
     environment:
       WANDB_API_KEY: abc7a849d5def805be56001abf5129be68e0fa47
-  sweeper_threshold:
-    build: .
-    command: [ "wandb", "agent", "ptajman/min_pandl_1000_threshold/62k4i3gp" ]
-    volumes:
-      - ./wandb:/job/wandb
-    environment:
-      WANDB_API_KEY: abc7a849d5def805be56001abf5129be68e0fa47
+      WANDB_MODE: offline

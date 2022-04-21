@@ -1,0 +1,25 @@
+program: sweeper.py
+method: bayes
+project: min_pandl_1000_improving
+metric:
+  name: profitability_compound
+  goal: maximize
+parameters:
+  improving_discount_rate:
+    min: 0.01
+    max: 0.99
+  objective_absolute_delta:
+    min: 0.2
+    max: 0.8
+  total_budget:
+    value: 1000
+  max_steps:
+    value: 10000
+  loss_policy_type:
+    value: "improving"
+  maximal_absolute_loss:
+    values: [-100, 0]
+  experiment_first_group:
+    value: "BTC-210507"
+  experiment_last_group:
+    value: "BTC-220201"
