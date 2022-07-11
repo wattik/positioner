@@ -41,7 +41,7 @@ def compute_strategy(
     objective_type: Literal["expected_pandl", "min_pandl"] = "expected_pandl",
     max_shift: float = 10_000,
     objective_relative_bounds: tuple[float] = None,
-    objective_absolute_bounds: tuple[float] = None,
+    objective_absolute_bounds: tuple[float, float] = None,
     use_clean_from_costly_trades: bool = True,
 ) -> Strategy:
     expected_index_price = expected_index_price or index_price
