@@ -7,4 +7,4 @@ services:
      - ./wandb:/job/wandb
     environment:
       WANDB_API_KEY: abc7a849d5def805be56001abf5129be68e0fa47
-      WANDB_MODE: offline
+#      WANDB_MODE: offline
