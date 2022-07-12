@@ -82,14 +82,16 @@ def simulate_option_group(option_group: str, config: dict):
 
 
 def run(default_config: dict):
-    option_groups = fetch_option_groups(default_config["experiment_first_group"],
-                                        default_config["experiment_last_group"])
-
     wandb.init(project="test-project", config=default_config)
     config = wandb.config
 
     logging.info(f"New Run")
     logging.info(pformat(config))
+
+    option_groups = fetch_option_groups(
+        config["experiment_first_group"],
+        config["experiment_last_group"]
+    )
     logging.info(f"Option Groups: {option_groups}")
     logging.info("=" * 50)
 

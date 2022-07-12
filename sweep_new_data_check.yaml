@@ -6,15 +6,15 @@ metric:
   goal: maximize
 parameters:
   improving_discount_rate:
-    min: 0.2
-    max: 0.99
+    min: 0.0
+    max: 1.0
   objective_absolute_delta:
     min: 0.4
     max: 0.6
   total_budget:
     value: 1000
   max_steps:
-    value: 100
+    value: 1000
   loss_policy_type:
     value: "improving"
   maximal_absolute_loss:

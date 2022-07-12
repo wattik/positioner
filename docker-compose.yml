@@ -2,9 +2,8 @@ version: "3.3"
 services:
   sweeper:
     build: .
-    command: ["wandb", "agent", "ptajman/new_data_check/n9mdmdg5"]
+    command: ["wandb", "agent", "ptajman/new_data_check/b1tjpjlg"]
     volumes:
      - ./wandb:/job/wandb
     environment:
       WANDB_API_KEY: abc7a849d5def805be56001abf5129be68e0fa47
-#      WANDB_MODE: offline
