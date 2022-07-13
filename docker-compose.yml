@@ -2,7 +2,7 @@ version: "3.3"
 services:
   sweeper:
     build: .
-    command: ["wandb", "agent", "ptajman/new_data_check/b1tjpjlg"]
+    command: ["wandb", "agent", "ptajman/small_option_groups/mzjplr5i"]
     volumes:
      - ./wandb:/job/wandb
     environment:

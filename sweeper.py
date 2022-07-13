@@ -90,7 +90,9 @@ def run(default_config: dict):
 
     option_groups = fetch_option_groups(
         config["experiment_first_group"],
-        config["experiment_last_group"]
+        config["experiment_last_group"],
+        min_expiration_days=config["min_expiration_days"],
+        max_expiration_days=config["max_expiration_days"],
     )
     logging.info(f"Option Groups: {option_groups}")
     logging.info("=" * 50)
@@ -135,6 +137,8 @@ if __name__ == '__main__':
         objective_absolute_delta=0.45,
         experiment_first_group="BTC-210507",
         experiment_last_group="BTC-220201",
+        max_expiration_days=10000,
+        min_expiration_days=20,
     )
 
     run(config)

@@ -54,7 +54,10 @@ def fetch_order_books(option_group):
     return order_books, index_prices, timestamps
 
 
-def fetch_option_groups(first_group: str, last_group: str, min_expiration_days=20):
+def fetch_option_groups(first_group: str, last_group: str, min_expiration_days=None, max_expiration_days=None):
+    min_expiration_days = min_expiration_days or -1
+    max_expiration_days = max_expiration_days or 1000000
+
     db = Database()
     orderbook_mapper = OrderbookMapper(db.client)
 
@@ -80,8 +83,8 @@ def fetch_option_groups(first_group: str, last_group: str, min_expiration_days=2
 
         group_timestamp = datetime.strptime(group_time_raw, "%y%m%d")
         expiration_days = abs((group_timestamp - first_order_book["created_at"]).days)
-        if expiration_days >= min_expiration_days:
+
+        if min_expiration_days <= expiration_days <= max_expiration_days:
             filtered_groups.append(group)
-        # print(f'First order book for {group} with timestamp {group_timestamp} is {first_order_book["created_at"]}.
-        # Expires in {expiration_days}')
+
     return filtered_groups
