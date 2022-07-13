@@ -123,16 +123,16 @@ if __name__ == '__main__':
     logging.basicConfig(level="INFO")
     config = dict(
         total_budget=1000,
-        max_steps=10,
+        max_steps=100,
         contingency_space_type="absolute",
         contingency_space_delta=0.7,
-        loss_policy_type="threshold",
+        loss_policy_type="improving",
         max_loss_policy_type="absolute",
-        maximal_absolute_loss=-100,
-        improving_discount_rate=0.90,
+        maximal_absolute_loss=0,
+        improving_discount_rate=0.50,
         objective_type="min_pandl",
         min_pandl_space_type="absolute",
-        objective_absolute_delta=0.6,
+        objective_absolute_delta=0.45,
         experiment_first_group="BTC-210507",
         experiment_last_group="BTC-220201",
     )
