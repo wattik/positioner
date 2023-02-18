@@ -107,7 +107,9 @@ def run(default_config: dict):
             fail_rate=res.fail_rate,
         ))
 
+        logging.info("log to wandb: init")
         wandb.log({"group_profitability": res.profitability}, step=i)
+        logging.info("log to wandb: successful")
 
     df = pd.DataFrame(results)
 
